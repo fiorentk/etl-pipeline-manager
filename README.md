@@ -1,73 +1,71 @@
-# React + TypeScript + Vite
+# ETL Pipeline Manager
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A full-stack application to manage data pipelines (Datasource, Dataflow, Destination).
 
-Currently, two official plugins are available:
+## Prerequisites
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Node.js (v18 or higher)
+- SQL Server (RDS or local SQL Server instance)
 
-## React Compiler
+## Setting Up
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 1. Backend (`/be`)
+The backend is built with Node.js, Express, and Prisma ORM connecting to SQL Server.
 
-## Expanding the ESLint configuration
+1. Navigate to the backend directory:
+   ```bash
+   cd be
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Set up your environment variables by creating a `.env` file in the `be` folder:
+   ```env
+   DATABASE_URL="sqlserver://<HOST>:<PORT>;database=<DB_NAME>;user=<USER>;password=<PASSWORD>;encrypt=true"
+   JWT_SECRET="your_secret_key"
+   PORT=5000
+   ```
+4. Run migrations and seed the database:
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   npx prisma db seed
+   ```
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+**Default Admin User (Created during seed):**
+- **Username:** `admin`
+- **Password:** `admin123`
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+5. Start the backend:
+   ```bash
+   npm run dev
+   ```
+   The backend will run on `http://localhost:5000`.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### 2. Frontend (`/fe`)
+The frontend is built with Next.js (App Router) and TailwindCSS.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+1. Navigate to the frontend directory:
+   ```bash
+   cd fe
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Set up your environment variables by creating a `.env.local` file in the `fe` folder:
+   ```env
+   NEXT_PUBLIC_API_URL="http://localhost:5000/api"
+   ```
+4. Start the frontend:
+   ```bash
+   npm run dev
+   ```
+   The frontend will run on `http://localhost:3000`.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Architecture
+- **Frameworks:** Next.js (FE), Node.js/Express (BE)
+- **Database:** SQL Server
+- **ORM:** Prisma
+- **Styling:** Tailwind CSS

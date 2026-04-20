@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+}
+
+model User {
+  id         Int      @id @default(autoincrement())
+  username   String   @unique
+  password   String
+  role       String
+  created_by String?
+  created_at DateTime @default(now())
+  updated_by String?
+  updated_at DateTime @updatedAt
+  isactive   Boolean  @default(true)
+}
+
+model Datasource {
+  id              Int      @id @default(autoincrement())
+  name            String
+  host            String
+  owner_pic       String?
+  source_engine   String
+  type            String
+  port            Int
+  db_schema_table String
+  description     String?
+  specs           String?
+  credentials     String?
+  created_by      String?
+  created_at      DateTime @default(now())
+  updated_by      String?
+  updated_at      DateTime @updatedAt
+  isactive        Boolean  @default(true)
+
+  etls            Etl[]
+}
+
+model Dataflow {
+  id                  Int      @id @default(autoincrement())
+  etl_server          String
+  etl_type            String
+  etl_script_folder   String
+  etl_main_script     String
+  etl_execution_env   String
+  cronschedule        String
+  created_by          String?
+  created_at          DateTime @default(now())
+  updated_by          String?
+  updated_at          DateTime @updatedAt
+  isactive            Boolean  @default(true)
+
+  etls                Etl[]
+}
+
+model Destination {
+  id               Int      @id @default(autoincrement())
+  type             String
+  path_destination String
+  pic              String?
+  description      String?
+  created_by       String?
+  created_at       DateTime @default(now())
+  updated_by       String?
+  updated_at       DateTime @updatedAt
+  isactive         Boolean  @default(true)
+
+  etls             Etl[]
+}
+
+model Etl {
+  id             Int      @id @default(autoincrement())
+  datasource_id  Int
+  dataflow_id    Int
+  destination_id Int
+  created_by     String?
+  created_at     DateTime @default(now())
+  updated_by     String?
+  updated_at     DateTime @updatedAt
+  isactive       Boolean  @default(true)
+
+  datasource     Datasource  @relation(fields: [datasource_id], references: [id])
+  dataflow       Dataflow    @relation(fields: [dataflow_id], references: [id])
+  destination    Destination @relation(fields: [destination_id], references: [id])
+}
