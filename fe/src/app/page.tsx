@@ -140,6 +140,22 @@ const UsersIcon = () => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
   </svg>
 );
+const EyeIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+  </svg>
+);
+const EyeOffIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+  </svg>
+);
+const KeyIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+  </svg>
+);
 
 // ──────────────────────────────────────────────
 // Shared components
@@ -199,7 +215,7 @@ function FormField({ label, name, value, onChange, type = "text", placeholder = 
   label: string; name: string; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   type?: string; placeholder?: string; required?: boolean; options?: { label: string; value: string }[];
 }) {
-  const cls = "w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-gray-50 transition";
+  const cls = "w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-white transition placeholder:text-gray-400";
   if (options) {
     return (
       <div>
@@ -251,6 +267,89 @@ function DeleteConfirmModal({ itemLabel, onConfirm, onCancel }: { itemLabel: str
 }
 
 // ──────────────────────────────────────────────
+// Change Password Modal
+// ──────────────────────────────────────────────
+function ChangePasswordModal({ onClose }: { onClose: () => void }) {
+  const [form, setForm] = useState({ oldPassword: "", newPassword: "", confirmPassword: "" });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (form.newPassword !== form.confirmPassword) {
+      setError("New passwords do not match");
+      return;
+    }
+    if (form.newPassword.length < 6) {
+      setError("New password must be at least 6 characters");
+      return;
+    }
+    setSaving(true);
+    try {
+      await apiFetch("/auth/change-password", {
+        method: "POST",
+        body: JSON.stringify({ oldPassword: form.oldPassword, newPassword: form.newPassword }),
+      });
+      setSuccess(true);
+    } catch (err: any) {
+      if (err.message === "400") setError("Current password is incorrect");
+      else setError("Failed to change password. Try again.");
+    }
+    setSaving(false);
+  };
+
+  const inputCls = "w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent placeholder:text-gray-400 transition";
+
+  return (
+    <Modal title="Change Password" onClose={onClose}>
+      {success ? (
+        <div className="text-center py-6">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <p className="font-bold text-gray-900 text-lg">Password Changed!</p>
+          <p className="text-sm text-gray-500 mt-1">Your password has been updated successfully.</p>
+          <button onClick={onClose} className="mt-6 px-6 py-2 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition">Close</button>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Current Password <span className="text-red-500">*</span></label>
+            <input type="password" name="oldPassword" value={form.oldPassword} onChange={handleChange} required placeholder="••••••••" className={inputCls} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">New Password <span className="text-red-500">*</span></label>
+            <input type="password" name="newPassword" value={form.newPassword} onChange={handleChange} required placeholder="••••••••" className={inputCls} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Confirm New Password <span className="text-red-500">*</span></label>
+            <input type="password" name="confirmPassword" value={form.confirmPassword} onChange={handleChange} required placeholder="••••••••" className={inputCls} />
+          </div>
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 font-medium">
+              {error}
+            </div>
+          )}
+          <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition">Cancel</button>
+            <button type="submit" disabled={saving} className="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition disabled:opacity-60">
+              {saving ? "Saving…" : "Change Password"}
+            </button>
+          </div>
+        </form>
+      )}
+    </Modal>
+  );
+}
+
+// ──────────────────────────────────────────────
 // DATASOURCE section
 // ──────────────────────────────────────────────
 const emptyDatasource = { name: "", host: "", owner_pic: "", source_engine: "", type: "", port: "", db_schema_table: "", description: "", specs: "", credentials: "" };
@@ -264,6 +363,13 @@ function DatasourceSection({ token }: { token: string }) {
   const [deleteTarget, setDeleteTarget] = useState<Datasource | null>(null);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
+  const [visibleCredentials, setVisibleCredentials] = useState<Set<number>>(new Set());
+
+  const toggleCredential = (id: number) => setVisibleCredentials(prev => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -307,7 +413,7 @@ function DatasourceSection({ token }: { token: string }) {
   return (
     <div>
       <div className="flex flex-col sm:flex-row gap-4 mb-6 items-start sm:items-center justify-between">
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search datasources…" className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm w-full sm:w-72 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search datasources…" className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-900 bg-white w-full sm:w-72 focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-400" />
         <button onClick={openAdd} className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition shadow-lg shadow-blue-200 active:scale-95 whitespace-nowrap">
           <PlusIcon /> Add Datasource
         </button>
@@ -318,7 +424,7 @@ function DatasourceSection({ token }: { token: string }) {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                {["Name", "Source Engine", "Type", "Host", "Port", "DB.Schema.Table", "Owner/PIC", "Actions"].map(h => (
+                {["Name", "Source Engine", "Type", "Host", "Port", "DB.Schema.Table", "Owner/PIC", "Credentials", "Actions"].map(h => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -333,6 +439,18 @@ function DatasourceSection({ token }: { token: string }) {
                   <td className="px-4 py-3 text-gray-600">{r.port}</td>
                   <td className="px-4 py-3 text-gray-600 font-mono text-xs max-w-[180px] truncate">{r.db_schema_table}</td>
                   <td className="px-4 py-3 text-gray-600">{r.owner_pic || "—"}</td>
+                  <td className="px-4 py-3">
+                    {r.credentials ? (
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono text-xs text-gray-700 max-w-[120px] truncate">
+                          {visibleCredentials.has(r.id) ? r.credentials : "••••••••"}
+                        </span>
+                        <button onClick={() => toggleCredential(r.id)} className="p-1 rounded-md hover:bg-blue-100 text-blue-500 transition flex-shrink-0" title={visibleCredentials.has(r.id) ? "Hide" : "Show"}>
+                          {visibleCredentials.has(r.id) ? <EyeOffIcon /> : <EyeIcon />}
+                        </button>
+                      </div>
+                    ) : <span className="text-gray-400 text-xs">—</span>}
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
                       <button onClick={() => openEdit(r)} className="p-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition" title="Edit"><EditIcon /></button>
@@ -428,7 +546,7 @@ function DataflowSection({ token }: { token: string }) {
   return (
     <div>
       <div className="flex flex-col sm:flex-row gap-4 mb-6 items-start sm:items-center justify-between">
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search dataflows…" className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm w-full sm:w-72 bg-white focus:outline-none focus:ring-2 focus:ring-amber-400" />
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search dataflows…" className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-900 bg-white w-full sm:w-72 focus:outline-none focus:ring-2 focus:ring-amber-400 placeholder-gray-400" />
         <button onClick={openAdd} className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition shadow-lg shadow-amber-200 active:scale-95 whitespace-nowrap">
           <PlusIcon /> Add Dataflow
         </button>
@@ -544,7 +662,7 @@ function DestinationSection({ token }: { token: string }) {
   return (
     <div>
       <div className="flex flex-col sm:flex-row gap-4 mb-6 items-start sm:items-center justify-between">
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search destinations…" className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm w-full sm:w-72 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search destinations…" className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-900 bg-white w-full sm:w-72 focus:outline-none focus:ring-2 focus:ring-emerald-400 placeholder-gray-400" />
         <button onClick={openAdd} className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition shadow-lg shadow-emerald-200 active:scale-95 whitespace-nowrap">
           <PlusIcon /> Add Destination
         </button>
@@ -621,6 +739,14 @@ function EtlSection({ token }: { token: string }) {
   const [deleteTarget, setDeleteTarget] = useState<Etl | null>(null);
   const [saving, setSaving] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [visibleCredentials, setVisibleCredentials] = useState<Set<number>>(new Set());
+  const [search, setSearch] = useState("");
+
+  const toggleCredential = (id: number) => setVisibleCredentials(prev => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -667,17 +793,39 @@ function EtlSection({ token }: { token: string }) {
   const dfOptions = dataflows.map(d => ({ value: String(d.id), label: `${d.etl_type} @ ${d.etl_server}` }));
   const destOptions = destinations.map(d => ({ value: String(d.id), label: `${d.type} — ${d.path_destination}` }));
 
+  const filtered = records.filter(r => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    const ds = r.datasource || datasources.find(d => d.id === r.datasource_id);
+    const df = r.dataflow || dataflows.find(d => d.id === r.dataflow_id);
+    const dest = r.destination || destinations.find(d => d.id === r.destination_id);
+    return (
+      ds?.name.toLowerCase().includes(q) ||
+      ds?.source_engine.toLowerCase().includes(q) ||
+      df?.etl_type.toLowerCase().includes(q) ||
+      df?.etl_server.toLowerCase().includes(q) ||
+      dest?.type.toLowerCase().includes(q) ||
+      dest?.path_destination.toLowerCase().includes(q)
+    );
+  });
+
   return (
     <div>
-      <div className="flex justify-end mb-6">
-        <button onClick={openAdd} className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition shadow-lg shadow-violet-200 active:scale-95">
+      <div className="flex flex-col sm:flex-row gap-4 mb-6 items-start sm:items-center justify-between">
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search pipelines… (datasource, dataflow, destination)"
+          className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-900 bg-white w-full sm:flex-1 focus:outline-none focus:ring-2 focus:ring-violet-400 placeholder-gray-400"
+        />
+        <button onClick={openAdd} className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition shadow-lg shadow-violet-200 active:scale-95 whitespace-nowrap">
           <PlusIcon /> Add ETL Pipeline
         </button>
       </div>
 
-      {loading ? <Spinner /> : records.length === 0 ? <EmptyState label="ETL pipelines" /> : (
+      {loading ? <Spinner /> : filtered.length === 0 ? <EmptyState label="ETL pipelines" /> : (
         <div className="space-y-3">
-          {records.map(r => {
+          {filtered.map(r => {
             const ds = r.datasource || datasources.find(d => d.id === r.datasource_id);
             const df = r.dataflow || dataflows.find(d => d.id === r.dataflow_id);
             const dest = r.destination || destinations.find(d => d.id === r.destination_id);
@@ -726,16 +874,31 @@ function EtlSection({ token }: { token: string }) {
                     {/* Datasource detail */}
                     <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
                       <p className="text-xs font-bold text-blue-600 uppercase tracking-wide mb-3 flex items-center gap-1"><DatabaseIcon /> Data Source</p>
-                      {ds ? [
-                        ["Host", ds.host], ["Port", String(ds.port)], ["Type", ds.type],
-                        ["DB.Schema.Table", ds.db_schema_table], ["Owner/PIC", ds.owner_pic || "—"],
-                        ["Specs", ds.specs || "—"], ["Credentials", ds.credentials || "—"], ["Description", ds.description || "—"]
-                      ].map(([k, v]) => (
-                        <div key={k} className="mb-1.5">
-                          <span className="text-xs text-blue-400 font-medium">{k}: </span>
-                          <span className="text-xs text-blue-900 font-mono break-all">{v}</span>
-                        </div>
-                      )) : <p className="text-xs text-gray-400">No details available</p>}
+                      {ds ? (
+                        <>
+                          {([
+                            ["Host", ds.host], ["Port", String(ds.port)], ["Type", ds.type],
+                            ["DB.Schema.Table", ds.db_schema_table], ["Owner/PIC", ds.owner_pic || "—"],
+                            ["Specs", ds.specs || "—"], ["Description", ds.description || "—"]
+                          ] as [string, string][]).map(([k, v]) => (
+                            <div key={k} className="mb-1.5">
+                              <span className="text-xs text-blue-400 font-medium">{k}: </span>
+                              <span className="text-xs text-blue-900 font-mono break-all">{v}</span>
+                            </div>
+                          ))}
+                          {ds.credentials && (
+                            <div className="mb-1.5">
+                              <span className="text-xs text-blue-400 font-medium">Credentials: </span>
+                              <span className="text-xs text-blue-900 font-mono break-all inline-flex items-center gap-1">
+                                {visibleCredentials.has(r.id) ? ds.credentials : "••••••••"}
+                                <button onClick={() => toggleCredential(r.id)} className="p-0.5 rounded hover:bg-blue-200 text-blue-500 transition" title={visibleCredentials.has(r.id) ? "Hide" : "Show"}>
+                                  {visibleCredentials.has(r.id) ? <EyeOffIcon /> : <EyeIcon />}
+                                </button>
+                              </span>
+                            </div>
+                          )}
+                        </>
+                      ) : <p className="text-xs text-gray-400">No details available</p>}
                     </div>
 
                     {/* Dataflow detail */}
@@ -860,7 +1023,7 @@ function UsersSection() {
   return (
     <div>
       <div className="flex flex-col sm:flex-row gap-4 mb-6 items-start sm:items-center justify-between">
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search users…" className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm w-full sm:w-72 bg-white focus:outline-none focus:ring-2 focus:ring-rose-400" />
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search users…" className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-900 bg-white w-full sm:w-72 focus:outline-none focus:ring-2 focus:ring-rose-400 placeholder-gray-400" />
         <button onClick={openAdd} className="inline-flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition shadow-lg shadow-rose-200 active:scale-95 whitespace-nowrap">
           <PlusIcon /> Add User
         </button>
@@ -911,7 +1074,7 @@ function UsersSection() {
             <FormField label={modal === "edit" ? "New Password (leave blank to keep current)" : "Password"} name="password" value={form.password} onChange={handleChange} type="password" placeholder="••••••••" required={modal === "add"} />
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Role<span className="text-red-500 ml-1">*</span></label>
-              <select name="role" value={form.role} onChange={handleChange} required className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 bg-gray-50">
+              <select name="role" value={form.role} onChange={handleChange} required className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-rose-400">
                 <option value="user">User</option>
                 <option value="admin">Admin</option>
               </select>
@@ -955,6 +1118,7 @@ export default function App() {
   const [token, setToken] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<{ username: string; role: string } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -1028,8 +1192,12 @@ export default function App() {
           ))}
         </nav>
 
-        {/* Logout */}
-        <div className="px-3 py-4 border-t border-gray-100">
+        {/* Change Password + Logout */}
+        <div className="px-3 py-4 border-t border-gray-100 space-y-1">
+          <button onClick={() => { setChangePasswordOpen(true); setSidebarOpen(false); }} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-indigo-600 hover:bg-indigo-50 transition">
+            <KeyIcon />
+            Change Password
+          </button>
           <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-red-500 hover:bg-red-50 transition">
             <LogoutIcon />
             Logout
@@ -1076,6 +1244,8 @@ export default function App() {
           )}
         </main>
       </div>
+
+      {changePasswordOpen && <ChangePasswordModal onClose={() => setChangePasswordOpen(false)} />}
     </div>
   );
 }

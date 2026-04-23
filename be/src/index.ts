@@ -13,10 +13,10 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Routes
+// Routes — specific routes must be registered BEFORE the wildcard /:type entity router
 app.use('/api/auth', authRoutes);
-app.use('/api', entityRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api', entityRoutes);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });

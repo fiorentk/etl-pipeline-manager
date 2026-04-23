@@ -49,3 +49,58 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+// POST /api/auth/change-password — change the logged-in user's password
+export const changePassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    if (!oldPassword || !newPassword) {
+      res.status(400).json({ error: 'oldPassword and newPassword are required' });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      res.status(400).json({ error: 'New password must be at least 6 characters' });
+      return;
+    }
+
+    const token = authHeader.split(' ')[1];
+    let payload: any;
+    try {
+      payload = require('jsonwebtoken').verify(token, JWT_SECRET);
+    } catch {
+      res.status(401).json({ error: 'Invalid or expired token' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: payload.id } });
+    if (!user || !user.isactive) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    const valid = await bcrypt.compare(oldPassword, user.password);
+    if (!valid) {
+      res.status(400).json({ error: 'Current password is incorrect' });
+      return;
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashed },
+    });
+
+    res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

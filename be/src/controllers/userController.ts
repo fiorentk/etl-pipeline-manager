@@ -34,15 +34,24 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
     }
 
     const hashed = await bcrypt.hash(password, 10);
-    const user = await prisma.user.create({
-      data: { username, password: hashed, role },
+
+    // Use create without select to avoid MSSQL OUTPUT clause issues,
+    // then fetch the created user separately
+    await prisma.user.create({
+      data: { username, password: hashed, role, isactive: true },
+    });
+
+    const user = await prisma.user.findUnique({
+      where: { username },
       select: { id: true, username: true, role: true, created_at: true },
     });
 
     res.status(201).json(user);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+  } catch (error: any) {
+    const code = error?.code || '';
+    const msg = error?.message || String(error);
+    console.error('createUser error [code=' + code + ']:', msg);
+    res.status(500).json({ error: 'Failed to save user', code, detail: msg });
   }
 };
 
