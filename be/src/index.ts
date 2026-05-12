@@ -10,7 +10,10 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 5000;
 
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:8005',
+  credentials: true
+}));
 app.use(express.json());
 
 // Routes — specific routes must be registered BEFORE the wildcard /:type entity router

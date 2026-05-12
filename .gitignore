@@ -10,7 +10,8 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
-
+.opencode
+opencode.json
 # testing
 /coverage
 
