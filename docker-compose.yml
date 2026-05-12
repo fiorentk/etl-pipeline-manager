@@ -6,10 +6,7 @@ services:
     ports:
       - "8006:8006"
     environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - JWT_SECRET=${JWT_SECRET}
       - PORT=8006
-      - CORS=${CORS}
     env_file:
       - ./be/.env
     restart: unless-stopped
@@ -25,7 +22,7 @@ services:
       context: ./fe
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_API_URL: http://localhost:8006/api
     ports:
       - "8005:8005"
     depends_on:
