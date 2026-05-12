@@ -4,16 +4,13 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-COPY prisma.config.ts ./
 
 # Install dependencies
 RUN npm ci
 
-# Copy prisma schema
+# Copy prisma schema and config
 COPY prisma ./prisma
-
-# Generate Prisma Client
-RUN npx prisma generate
+COPY prisma.config.ts ./
 
 # Copy source code
 COPY . .
@@ -21,5 +18,5 @@ COPY . .
 # Expose port
 EXPOSE 8006
 
-# Start script that runs migrations then starts the server
-CMD npx prisma db push && npm start
+# Start script that generates client, runs migrations, then starts the server
+CMD npx prisma generate && npx prisma db push && npm start
