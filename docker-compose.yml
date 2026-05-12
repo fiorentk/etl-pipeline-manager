@@ -9,6 +9,7 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - JWT_SECRET=${JWT_SECRET}
       - PORT=8006
+      - CORS=http://localhost:8005
     env_file:
       - ./be/.env
     restart: unless-stopped
@@ -26,7 +27,7 @@ services:
     ports:
       - "8005:8005"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8006/api
+      - NEXT_PUBLIC_API_URL=http://localhost:8005/api
     env_file:
       - ./fe/.env.local
     depends_on:
